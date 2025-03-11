@@ -23,7 +23,7 @@ class ExclusiveRoles(Cog):
         return
 
     @commands.guild_only()
-    @commands.group(aliases=["exclusiverole"])
+    @commands.group(aliases=["exclusiveroles"])
     async def exclusive(self, ctx):
         """Base command for managing exclusive roles"""
 
@@ -102,15 +102,15 @@ class ExclusiveRoles(Cog):
 
         await asyncio.sleep(1)
 
-    role_set = set(await self.config.guild(after.guild).role_list())
-    new_exclusive_roles = [role for role in after.roles if role.id in role_set]
+        role_set = set(await self.config.guild(after.guild).role_list())
+        new_exclusive_roles = [role for role in after.roles if role.id in role_set]
 
-    if len(new_exclusive_roles) > 1:
-        added_roles = [role for role in new_exclusive_roles if role not in before.roles]
-        keep_role = added_roles[-1] if added_roles else new_exclusive_roles[-1]
-        roles_to_remove = [role for role in new_exclusive_roles if role != keep_role]
+        if len(new_exclusive_roles) > 1:
+            added_roles = [role for role in new_exclusive_roles if role not in before.roles]
+            keep_role = added_roles[-1] if added_roles else new_exclusive_roles[-1]
+            roles_to_remove = [role for role in new_exclusive_roles if role != keep_role]
 
-        try:
-            await after.remove_roles(*roles_to_remove)
-        except discord.Forbidden:
-            pass
+            try:
+                await after.remove_roles(*roles_to_remove)
+            except discord.Forbidden:
+                pass
