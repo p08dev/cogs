@@ -6,7 +6,7 @@
     "min_bot_version": "3.4.0",
     "description": "Assign roles to be exclusive, preventing other exclusive roles from being added. Normal roles are unaffected.",
     "hidden": false,
-    "install_msg": "Thank you for installing ExclusiveRoles. Get started with `[p]load exclusiverole` and `[p]help ExclusiveRole`",
+    "install_msg": "Thank you for installing ExclusiveRoles. Get started with `[p]load exclusiveroles` and `[p]help ExclusiveRoles`",
     "short": "Set roles to be exclusive",
     "end_user_data_statement": "This cog does not store any End User Data",
     "tags": [
