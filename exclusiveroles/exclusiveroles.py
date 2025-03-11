@@ -5,7 +5,7 @@ from redbot.core import Config, checks, commands
 from redbot.core.commands import Cog
 
 
-class ExclusiveRole(Cog):
+class ExclusiveRoles(Cog):
     """
     Create roles that prevent all other exclusive roles from being added
     """
@@ -40,7 +40,7 @@ class ExclusiveRole(Cog):
         async with self.config.guild(ctx.guild).role_list() as rl:
             rl.append(role.id)
 
-        await self.check_guild(ctx.guild)
+        #await self.check_guild(ctx.guild)
 
         await ctx.send("Exclusive role added")
 
@@ -85,28 +85,11 @@ class ExclusiveRole(Cog):
             role_set = set(await self.config.guild(member.guild).role_list())
 
         member_set = {role.id for role in member.roles}
-        
-        # Rolle für exklusive Rollen
-        exclusive_roles = {role.id for role in role_set if role.is_exclusive}  # Beispiel, du kannst dies je nach Implementierung anpassen
-        
-        # Prüfen, ob bereits eine exklusive Rolle gesetzt ist
-        existing_exclusive_roles = member_set & exclusive_roles
-        
-        if existing_exclusive_roles:
-            # Entferne alle exklusiven Rollen, wenn eine andere exklusive Rolle gesetzt wird
-            to_remove = [discord.utils.get(member.guild.roles, id=r_id) for r_id in existing_exclusive_roles]
-            await member.remove_roles(*to_remove, reason="Exclusive role replaced")
+        to_remove = (member_set - role_set) - {member.guild.default_role.id}
 
-        # Jetzt die neue exklusive Rolle hinzufügen, falls sie gesetzt ist
-        new_exclusive_role = next((role for role in role_set if role.id not in member_set), None)
-        if new_exclusive_role:
-            await member.add_roles(new_exclusive_role, reason="Exclusive role added")
-        
-        # Entferne alle nicht-exklusiven Rollen, die gesetzt sind
-        to_remove_non_exclusive = (member_set - role_set) - {member.guild.default_role.id} - exclusive_roles
-        if to_remove_non_exclusive:
-            to_remove_non_exclusive = [discord.utils.get(member.guild.roles, id=r_id) for r_id in to_remove_non_exclusive]
-            await member.remove_roles(*to_remove_non_exclusive, reason="Non-exclusive roles removed")
+        if to_remove and member_set & role_set:
+            to_remove = [discord.utils.get(member.guild.roles, id=r_id) for r_id in to_remove]
+            await member.remove_roles(*to_remove, reason="Exclusive roles")
 
 
     @commands.Cog.listener()
@@ -119,11 +102,15 @@ class ExclusiveRole(Cog):
 
         await asyncio.sleep(1)
 
-        role_set = set(await self.config.guild(after.guild).role_list())
-        member_set = {role.id for role in after.roles}
+    role_set = set(await self.config.guild(after.guild).role_list())
+    new_exclusive_roles = [role for role in after.roles if role.id in role_set]
 
-        if role_set & member_set:
-            try:
-                await self.remove_non_exclusive_roles(after, role_set=role_set)
-            except discord.Forbidden:
-                pass
+    if len(new_exclusive_roles) > 1:
+        added_roles = [role for role in new_exclusive_roles if role not in before.roles]
+        keep_role = added_roles[-1] if added_roles else new_exclusive_roles[-1]
+        roles_to_remove = [role for role in new_exclusive_roles if role != keep_role]
+
+        try:
+            await after.remove_roles(*roles_to_remove)
+        except discord.Forbidden:
+            pass
