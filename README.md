@@ -1,5 +1,3 @@
-# Fox-V3
-
 Cog Function
 
 | Name | Status | Description (Click to see full status)
